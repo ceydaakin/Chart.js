@@ -1221,10 +1221,13 @@ export default class Scale extends Element {
         x = pixel;
 
         if (textAlign === 'inner') {
+          // Some scales (e.g. linear, time) already reverse the ticks array when `reverse` is set,
+          // so use the pixel order of the first and last tick instead of the option.
+          const ticksReversed = this.getPixelForTick(0) > this.getPixelForTick(ilen - 1);
           if (i === ilen - 1) {
-            tickTextAlign = !this.options.reverse ? 'right' : 'left';
+            tickTextAlign = !ticksReversed ? 'right' : 'left';
           } else if (i === 0) {
-            tickTextAlign = !this.options.reverse ? 'left' : 'right';
+            tickTextAlign = !ticksReversed ? 'left' : 'right';
           } else {
             tickTextAlign = 'center';
           }
@@ -1280,19 +1283,12 @@ export default class Scale extends Element {
           break;
         }
 
-        switch (textAlign) {
+        switch (tickTextAlign) {
         case 'center':
           left -= width / 2;
           break;
         case 'right':
           left -= width;
-          break;
-        case 'inner':
-          if (i === ilen - 1) {
-            left -= width;
-          } else if (i > 0) {
-            left -= width / 2;
-          }
           break;
         default:
           break;

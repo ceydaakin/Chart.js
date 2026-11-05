@@ -817,6 +817,47 @@ describe('Core.scale', function() {
       }
     });
   });
+  describe('ticks.align inner', () => {
+    function getEdgeLabelAligns(type, reverse) {
+      const chart = window.acquireChart({
+        type: 'line',
+        data: {
+          labels: ['a', 'b', 'c'],
+          datasets: [{
+            data: type === 'linear' ? [{x: 200, y: 1}, {x: 1000, y: 2}] : [1, 2, 3]
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              type,
+              min: type === 'linear' ? 200 : undefined,
+              max: type === 'linear' ? 1000 : undefined,
+              reverse,
+              ticks: {
+                align: 'inner'
+              }
+            }
+          }
+        }
+      });
+      const items = chart.scales.x.getLabelItems()
+        .slice()
+        .sort((a, b) => a.options.translation[0] - b.options.translation[0]);
+      return {
+        leftmost: items[0].options.textAlign,
+        rightmost: items[items.length - 1].options.textAlign
+      };
+    }
+
+    ['linear', 'category'].forEach((type) => {
+      [false, true].forEach((reverse) => {
+        it(`should align the edge labels inwards on a ${type} scale with reverse: ${reverse}`, () => {
+          expect(getEdgeLabelAligns(type, reverse)).toEqual({leftmost: 'left', rightmost: 'right'});
+        });
+      });
+    });
+  });
   describe('Scale Title stroke', ()=>{
     function getChartWithScaleTitleStroke() {
       return window.acquireChart({
