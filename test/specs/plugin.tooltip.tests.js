@@ -1817,6 +1817,41 @@ describe('Plugin.Tooltip', function() {
     expect(chart.tooltip.getActiveElements()).toEqual([]);
   });
 
+  // https://github.com/chartjs/Chart.js/issues/12397
+  it('should tolerate events after the canvas is detached', async function() {
+    const chart = window.acquireChart({
+      type: 'bar',
+      data: {
+        labels: ['a', 'b', 'c'],
+        datasets: [{data: [3, 5, 2]}]
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    }, {
+      canvas: {
+        style: ''
+      },
+      wrapper: {
+        style: 'width: 400px; height: 300px'
+      }
+    });
+
+    const point = chart.getDatasetMeta(0).data[1];
+    await jasmine.triggerMouseEvent(chart, 'mousemove', point);
+    expect(chart.tooltip.getActiveElements().length).toBe(1);
+
+    const wrapper = chart.canvas.parentNode;
+    wrapper.parentNode.removeChild(wrapper);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(chart.attached).toBeFalse();
+
+    await jasmine.triggerMouseEvent(chart, 'mousemove', {x: point.x, y: point.y + 5});
+    expect(chart.tooltip.getActiveElements()).toEqual([]);
+  });
+
   describe('events', function() {
     it('should not be called on events not in plugin events array', async function() {
       var chart = window.acquireChart({
